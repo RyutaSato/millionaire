@@ -1,9 +1,16 @@
 from enum import StrEnum, Enum
 
 
+class CardsRegularity(Enum):
+    none = 0
+    sequence = 1
+    equal = 2
+
+
 class CardCmdKey(Enum):
     ADD = 0  # cards classに Card or list[Card]を追加する
     # TODO:Cards class内で行う必要のある操作を定義する
+
 
 class CardNumber(Enum):
     """define types of number of each card
