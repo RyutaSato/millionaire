@@ -3,10 +3,9 @@ from __future__ import annotations
 from enum import Enum
 from logging import getLogger
 from random import shuffle
-from copy import copy
 
 from millionaire.libs.match.card import Card
-from millionaire.libs.match.card_types import CardSuite, CardNumber
+from millionaire.libs.match.card_types import CardCmdKey, CardSuite, CardNumber
 from millionaire.libs.match.settings import Settings
 
 logger = getLogger(__name__)
@@ -29,9 +28,12 @@ class Cards:
     """
 
     def __init__(self, cards: list, _regularity: CardsRegularity = CardsRegularity.none):
+    def __init__(self, cards: list = None, regularity: CardsRegularity = CardsRegularity.none):
+        if cards is None:
+            cards = []
         self._cards = {str(card): card for card in cards}
         self.__i = 0
-        self._regularity = _regularity
+        self.__regularity = regularity
 
     def __eq__(self, other: Card | Cards):
         if isinstance(other, Card):
@@ -92,84 +94,143 @@ class Cards:
     def __bool__(self):
         return bool(self._cards)
 
-    def __contains__(self, item: Card | CardNumber | CardSuite | Cards) -> bool:
-        if isinstance(item, str):
-            return item in self._cards
-        elif isinstance(item, Card):
-            return str(item) in self._cards
+    def __setitem__(self, key: CardCmdKey, value):
+        if key == CardCmdKey.ADD and isinstance(value, Card):
+            self._cards[str(value)] = value
+        else:
+            KeyError("'key' type must be `CardCmdKey`")
+
+    def __getitem__(self, item: str | Card | list[Card] | CardSuite | CardNumber) -> list:
+        """
+
+        Args:
+            item:
+
+        Warnings:
+            返り値は，list[list[Card]]のみとします，list[Card]はバグであり，DEPRECATED です．
+        """
+        if isinstance(item, Card):
+            return [card for card in self._cards if card > item]
+        elif isinstance(item, list):
+            if self.is_sequence(item):
+                return self.lookfor_sequence(item)
+            elif self.is_equal(item):
+                return self.lookfor_equal(item)
+            else:
+                raise KeyError("'item' is invalid type of list. don't match `sequence` or `equal`")
         elif isinstance(item, CardNumber):
-            for card in self._cards.values():
+            return [card for card in self._cards if card.number == item]
+        elif isinstance(item, CardSuite):
+            return [card for card in self._cards if card.suite == item]
+        else:
+            raise KeyError("'item' type must be `Card` or `list[Card]`")
+
+    def __delitem__(self, key: int | str | Card | CardNumber | CardSuite | list[Card]):
+        if isinstance(key, CardNumber):
+            self._cards = [card for card in self._cards if card.number != key]
+        elif isinstance(key, CardSuite):
+            self._cards = [card for card in self._cards if card.suite != key]
+        elif isinstance(key, int):
+            self._cards.pop(key)
+        elif isinstance(key, str):
+            self._cards.remove(Card.from_str(key))
+        elif isinstance(key, Card):
+            self._cards.remove(key)
+        elif isinstance(key, list):
+            for each in key:
+                del self[each]
+        else:
+            raise TypeError(f"'card' type must be `int`, `str`, `Card`, `CardNumber` or `CardSuite`")
+
+    def __contains__(self, item: Card | CardNumber | CardSuite | list[Card]) -> bool:
+        if isinstance(item, Card):
+            for card in self._cards:
+                if card == item and card.suite == item.suite:
+                    return True
+        elif isinstance(item, CardNumber):
+            for card in self._cards:
                 if card.number == item:
                     return True
         elif isinstance(item, CardSuite):
-            for card in self._cards.values():
+            for card in self._cards:
                 if card.suite == item:
                     return True
-        elif isinstance(item, Cards):
-            for each in item():
+        elif isinstance(item, list):
+            for each in item:
+                if not isinstance(each, Card):
+                    raise TypeError(f"'item' type in 'for item in ...' must be a list of 'Card' class")
                 if each not in self:
                     return False
             return True
+        elif hasattr(item, "cards"):
+            return item.cards in self
         else:
             raise TypeError(f"'item' type in 'for item in ...' must be a instance of 'Card' class")
+        return False
 
-    def __add__(self, other: Card | Cards):
-        cp_cards = copy(self)
-        if isinstance(other, Card):
-            cp_cards._cards[str(other)] = other
-            return cp_cards
-        elif isinstance(other, Cards):
-            for card in other():
-                cp_cards._cards[str(card)] = card
+    @property
+    def cards(self):
+        """
+        Notes:
+            DEPRECATED
+        Returns:
+            a list of card
+        """
+        logger.warning("Cards.cards method is deprecated.")
+        return self._cards
+
+    def add(self, cards: Card | list[Card] | None):
+
+        if isinstance(cards, Card):
+            self._cards[str(cards)] = cards
+        elif isinstance(cards, list) and cards:
+            for c in cards:
+                self.add(c)
         else:
-            raise ValueError(f"type {type(other)} is invalid")
-        return cp_cards
+            return
 
-    def __iadd__(self, other: Card | Cards):
-        if isinstance(other, Card):
-            self._cards[str(other)] = other
-        elif isinstance(other, Cards):
-            for card in other():
-                self._cards[str(card)] = card
-        else:
-            raise ValueError(f"type {type(other)} is invalid")
-        return self
+    def pop(self, __index: int = -1):
+        return self._cards.pop(__index)
 
-    def __sub__(self, other):
-        cp_cards = copy(self)
-        if isinstance(other, Card):
-            cp_cards._cards.pop(str(other))
-        elif isinstance(other, Cards):
-            for card in other():
-                cp_cards._cards.pop(str(card))
-        else:
-            raise ValueError(f"type {type(other)} is invalid")
-        return cp_cards
-
-    def __isub__(self, other):
-        if isinstance(other, Card):
-            self._cards.pop(str(other))
-        elif isinstance(other, Cards):
-            for card in other():
-                self._cards.pop(str(card))
-        else:
-            raise ValueError(f"type {type(other)} is invalid")
-        return self
-
-    def pop(self, __key):
-        return self._cards.pop(__key)
-
-    def lookfor_one(self, played_card: Card = None) -> list[Cards]:
-        li = []
-        for card in sorted(self()):
-            if played_card is None or card > played_card:
-                li.append(Cards([card], CardsRegularity.one))
+    def clear(self):
+        li = self._cards.values()
+        self._cards.clear()
         return li
 
+    @staticmethod
+    def is_one(cards):
+        """
+
+        Args:
+            cards:
+
+        Returns:
+
+        """
+        if isinstance(cards, Card) or (isinstance(cards, list) and len(cards) == 1 and isinstance(cards[0], Card)):
+            return True
+        return False
+
+    def lookfor_one(self, card: Card = None) -> list[list[Card]]:
+        """
+
+        Args:
+            card:
+
+        Returns:
+
+        """
+        self._cards.sort()
+        if card is None:
+            return [[c] for c in self._cards]
+        if card.suite in self:
+            return [[c] for c in self[card.suite] if c > card]
+        else:
+            return [[c] for c in self._cards if c > card]
 
     @staticmethod
     def is_sequence(played_cards: list[Card]) -> bool:
-        """ DEPRECATED
+        """
 
         Args:
             played_cards:
@@ -183,9 +244,9 @@ class Cards:
                 return False
         return len(played_cards) >= 3
 
-    def lookfor_sequence(self, played_cards: Cards = None) -> list[Cards]:
+    def lookfor_sequence(self, played_cards: list[Card] = None) -> list[list[Card]]:
         """
-        TODO: Need test
+
         Args:
             played_cards:
 
@@ -193,18 +254,19 @@ class Cards:
 
         """
         li = []
-        cards = sorted(self())
-        if isinstance(played_cards, Cards):
-            played_cards = sorted(played_cards())
+        if played_cards is not None and played_cards:
             num = len(played_cards)
-            min_card = played_cards[0]
+            logger.debug(f"min(played_cards): {min(played_cards)} self[min(played_cards)]: {self[min(played_cards)]}")
+            min_card = min(self[min(played_cards)]) if self[min(played_cards)] else Card(suite=CardSuite.JOKER,
+                                                                                         number=CardNumber.NONE,
+                                                                                         _strength=-1)
         else:
             num = 0
             min_card = Card(suite=CardSuite.JOKER, number=CardNumber.NONE, _strength=-1)  # 3の強さが0
         for suite in CardSuite:
             cnt = 1
             # TODO: jokerがある場合の挙動をかく．
-            same_suite_cards = [card for card in cards if card.suite == suite]
+            same_suite_cards = sorted(self[suite])
             for i in range(1, len(same_suite_cards) + 1):
                 if same_suite_cards[i - 1] > min_card and i != len(same_suite_cards) and same_suite_cards[i - 1] + 1 == \
                         same_suite_cards[i]:
@@ -214,19 +276,19 @@ class Cards:
                         cnt = 1
                         continue
                     if cnt >= 3 and (num == 0 or num == cnt):
-                        li.append(Cards([card for card in same_suite_cards[i - 3:i]]))
+                        li.append([card for card in same_suite_cards[i - 3:i]])
                     if cnt >= 4 and (num == 0 or num == cnt):
-                        li.append(Cards([card for card in same_suite_cards[i - 4:i - 1]]))
-                        li.append(Cards([card for card in same_suite_cards[i - 4:i]]))
+                        li.append([card for card in same_suite_cards[i - 4:i - 1]])
+                        li.append([card for card in same_suite_cards[i - 4:i]])
                     if cnt >= 5 and (num == 0 or num == cnt):
-                        li.append(Cards([card for card in same_suite_cards[i - 5:i - 2]]))
-                        li.append(Cards([card for card in same_suite_cards[i - 5:i - 1]]))
-                        li.append(Cards([card for card in same_suite_cards[i - 5:i]]))
+                        li.append([card for card in same_suite_cards[i - 5:i - 2]])
+                        li.append([card for card in same_suite_cards[i - 5:i - 1]])
+                        li.append([card for card in same_suite_cards[i - 5:i]])
                     if cnt >= 6 and (num == 0 or num == cnt):
-                        li.append(Cards([card for card in same_suite_cards[i - 6:i - 3]]))
-                        li.append(Cards([card for card in same_suite_cards[i - 6:i - 2]]))
-                        li.append(Cards([card for card in same_suite_cards[i - 6:i - 1]]))
-                        li.append(Cards([card for card in same_suite_cards[i - 6:i]]))
+                        li.append([card for card in same_suite_cards[i - 6:i - 3]])
+                        li.append([card for card in same_suite_cards[i - 6:i - 2]])
+                        li.append([card for card in same_suite_cards[i - 6:i - 1]])
+                        li.append([card for card in same_suite_cards[i - 6:i]])
                     cnt = 1
         return li
 
@@ -245,8 +307,7 @@ class Cards:
                 return False
         return True
 
-    def lookfor_equal(self, played_cards: list[Card] = None) -> list[Cards]:
-        # TODO: Upgrade
+    def lookfor_equal(self, played_cards: list[Card] = None) -> list[list[Card]]:
         """
 
         Args:
