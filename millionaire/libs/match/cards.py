@@ -113,54 +113,59 @@ class Cards:
         else:
             raise TypeError(f"'item' type in 'for item in ...' must be a instance of 'Card' class")
 
-    def add(self, cards: Card | list[Card] | None):
-
-        if isinstance(cards, Card):
-            self._cards[str(cards)] = cards
-        elif isinstance(cards, list) and cards:
-            for c in cards:
-                self.add(c)
+    def __add__(self, other: Card | Cards):
+        cp_cards = copy(self)
+        if isinstance(other, Card):
+            cp_cards._cards[str(other)] = other
+            return cp_cards
+        elif isinstance(other, Cards):
+            for card in other():
+                cp_cards._cards[str(card)] = card
         else:
-            return
+            raise ValueError(f"type {type(other)} is invalid")
+        return cp_cards
 
-    def pop(self, __index: int = -1):
-        return self._cards.pop(__index)
+    def __iadd__(self, other: Card | Cards):
+        if isinstance(other, Card):
+            self._cards[str(other)] = other
+        elif isinstance(other, Cards):
+            for card in other():
+                self._cards[str(card)] = card
+        else:
+            raise ValueError(f"type {type(other)} is invalid")
+        return self
 
-    def clear(self):
-        li = self._cards.values()
-        self._cards.clear()
+    def __sub__(self, other):
+        cp_cards = copy(self)
+        if isinstance(other, Card):
+            cp_cards._cards.pop(str(other))
+        elif isinstance(other, Cards):
+            for card in other():
+                cp_cards._cards.pop(str(card))
+        else:
+            raise ValueError(f"type {type(other)} is invalid")
+        return cp_cards
+
+    def __isub__(self, other):
+        if isinstance(other, Card):
+            self._cards.pop(str(other))
+        elif isinstance(other, Cards):
+            for card in other():
+                self._cards.pop(str(card))
+        else:
+            raise ValueError(f"type {type(other)} is invalid")
+        return self
+
+    def pop(self, __key):
+        return self._cards.pop(__key)
+
+    def lookfor_one(self, played_card: Card = None) -> list[Cards]:
+        li = []
+        for card in sorted(self()):
+            if played_card is None or card > played_card:
+                li.append(Cards([card], CardsRegularity.one))
         return li
 
-    @staticmethod
-    def is_one(cards):
-        """
-
-        Args:
-            cards:
-
-        Returns:
-
-        """
-        if isinstance(cards, Card) or (isinstance(cards, list) and len(cards) == 1 and isinstance(cards[0], Card)):
-            return True
-        return False
-
-    def lookfor_one(self, card: Card = None) -> list[list[Card]]:
-        """
-
-        Args:
-            card:
-
-        Returns:
-
-        """
-        self._cards.sort()
-        if card is None:
-            return [[c] for c in self._cards]
-        if card.suite in self:
-            return [[c] for c in self[card.suite] if c > card]
-        else:
-            return [[c] for c in self._cards if c > card]
 
     @staticmethod
     def is_sequence(played_cards: list[Card]) -> bool:
@@ -209,19 +214,19 @@ class Cards:
                         cnt = 1
                         continue
                     if cnt >= 3 and (num == 0 or num == cnt):
-                        li.append([card for card in same_suite_cards[i - 3:i]])
+                        li.append(Cards([card for card in same_suite_cards[i - 3:i]]))
                     if cnt >= 4 and (num == 0 or num == cnt):
-                        li.append([card for card in same_suite_cards[i - 4:i - 1]])
-                        li.append([card for card in same_suite_cards[i - 4:i]])
+                        li.append(Cards([card for card in same_suite_cards[i - 4:i - 1]]))
+                        li.append(Cards([card for card in same_suite_cards[i - 4:i]]))
                     if cnt >= 5 and (num == 0 or num == cnt):
-                        li.append([card for card in same_suite_cards[i - 5:i - 2]])
-                        li.append([card for card in same_suite_cards[i - 5:i - 1]])
-                        li.append([card for card in same_suite_cards[i - 5:i]])
+                        li.append(Cards([card for card in same_suite_cards[i - 5:i - 2]]))
+                        li.append(Cards([card for card in same_suite_cards[i - 5:i - 1]]))
+                        li.append(Cards([card for card in same_suite_cards[i - 5:i]]))
                     if cnt >= 6 and (num == 0 or num == cnt):
-                        li.append([card for card in same_suite_cards[i - 6:i - 3]])
-                        li.append([card for card in same_suite_cards[i - 6:i - 2]])
-                        li.append([card for card in same_suite_cards[i - 6:i - 1]])
-                        li.append([card for card in same_suite_cards[i - 6:i]])
+                        li.append(Cards([card for card in same_suite_cards[i - 6:i - 3]]))
+                        li.append(Cards([card for card in same_suite_cards[i - 6:i - 2]]))
+                        li.append(Cards([card for card in same_suite_cards[i - 6:i - 1]]))
+                        li.append(Cards([card for card in same_suite_cards[i - 6:i]]))
                     cnt = 1
         return li
 
