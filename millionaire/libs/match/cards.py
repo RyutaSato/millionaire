@@ -1,8 +1,9 @@
+from __future__ import annotations
 from logging import getLogger
 from random import shuffle
 
 from millionaire.libs.match.card import Card
-from millionaire.libs.match.card_types import CardCmdKey, CardSuite, CardNumber
+from millionaire.libs.match.card_types import CardsRegularity, CardCmdKey, CardSuite, CardNumber
 from millionaire.libs.match.settings import Settings
 
 logger = getLogger(__name__)
@@ -14,11 +15,12 @@ class Cards:
         cards(list[Card] | None): a list of Card class, otherwise, initialize empty list.
     """
 
-    def __init__(self, cards: list = None):
+    def __init__(self, cards: list = None, regularity: CardsRegularity = CardsRegularity.none):
         if cards is None:
             cards = []
         self._cards = {str(card): card for card in cards}
         self.__i = 0
+        self.__regularity = regularity
 
     def __call__(self) -> list[Card]:
         return list(self._cards.values())
@@ -179,7 +181,7 @@ class Cards:
                 return False
         return len(played_cards) >= 3
 
-    def lookfor_sequence(self, played_cards: list[Card] = None) -> list[list[Card]]:
+    def lookfor_sequence(self, played_cards: Cards = None) -> list[list[Card]]:
         """
 
         Args:
