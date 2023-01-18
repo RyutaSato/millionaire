@@ -28,7 +28,7 @@ def set_strength(number: int) -> int:
 
 @dataclass(frozen=True)
 class Card:
-    """
+    """このクラスの責任は，Card固有の変数の値を定義することです．
 
     Args:
         suite: CardSuite

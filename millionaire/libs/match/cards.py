@@ -9,7 +9,7 @@ logger = getLogger(__name__)
 
 
 class Cards:
-    """
+    """このクラスの責任は，複数のCardクラスを保持し，CRUD管理することです．
     Args:
         cards(list[Card] | None): a list of Card class, otherwise, initialize empty list.
     """
