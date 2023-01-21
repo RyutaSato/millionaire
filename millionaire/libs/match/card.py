@@ -6,7 +6,7 @@ from millionaire.libs.match.card_types import CardSuite, CardNumber
 #  TODO: settings.pyに移動予定
 SUITE_LIST = ["jo", "sp", "cl", "di", "he"]
 MAX_STRENGTH = 100
-REGEX_CARD = r"^(jo|sp|cl|di|he)(0|1|2|3|4|5|6|7|8|9|11|12|13)$"
+REGEX_CARD = r"^(jo|sp|cl|di|he)(0|1|2|3|4|5|6|7|8|9|10|11|12|13)$"
 pattern = re.compile(REGEX_CARD)
 
 
@@ -91,6 +91,7 @@ class Card:
             ValueError: If `string` doesn't match any patterns.
         """
         if pattern.match(string) is None:
+            print(string)
             raise ValueError("string doesn't match any patterns")
         su, num = pattern.match(string).groups()
         return cls(suite=CardSuite(su),
