@@ -304,11 +304,14 @@ class Cards:
 
     def lookfor_sequence(self, played_cards: Cards = None) -> list[Cards]:
         """
-        TODO: Need test
+
         Args:
             played_cards:
 
         Returns:
+
+        Warnings:
+            TODO:Jokerを含んだカードの処理は未定義です．
 
         """
         li = []
@@ -322,7 +325,6 @@ class Cards:
             min_card = Card(suite=CardSuite.JOKER, number=CardNumber.NONE, _strength=-1)  # 3の強さが0
         for suite in CardSuite:
             cnt = 1
-            # TODO: jokerがある場合の挙動をかく．
             same_suite_cards = self[suite]
             for i in range(1, len(same_suite_cards) + 1):
                 if same_suite_cards[i - 1] > min_card and i != len(same_suite_cards) and same_suite_cards[i - 1] + 1 == \
@@ -357,6 +359,8 @@ class Cards:
             played_cards:
 
         Returns:
+        Warnings:
+            TODO:Jokerを含んだカードの処理は未定義です．
 
         """
         li = []
@@ -423,8 +427,11 @@ class Cards:
             played_cards:
 
         Returns:
+        Warnings:
+            TODO:Jokerを含んだカードの処理は未定義です．
 
         """
+
         if played_cards is None:
             candidate_cards_set = self.lookfor_sequence(played_cards)
             candidate_cards_set.extend(self.lookfor_equal(played_cards))
