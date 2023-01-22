@@ -24,11 +24,9 @@ class Cards:
 
     このクラスは，Cardクラスをvalueに持つ疑似Dictionaryとして動作します．
     要素は，なるべく高速に要素の抽出を行うために，ソート後のindexとstrをキーとしたdictionaryの両方を保持しています．
-    したがって，探索がO(1)で動作します．
+    したがって，探索がO(1)で動作します．が，挿入はindex指定の場合O(1), strをキーとする場合O(n)です．
     Args:
         cards(list[Card] | None): a list of Card class, otherwise, initialize empty list.
-    Warnings:
-        Can't change a variable of members in the instance.
     """
 
     def __init__(self, cards: list[Card] = None, _regularity: CardsRegularity = CardsRegularity.none):
@@ -72,7 +70,7 @@ class Cards:
             step = key.step if key.step is not None else 1
             return Cards([self[i] for i in range(start, stop, step)])
         else:
-            raise KeyError("the key must be `str` or `int`")
+            raise KeyError("the key must be `str`, `int`, `CardSuite`, `CardNumber` or `slice`")
 
     def __delitem__(self, key: int | str | Card):
         if isinstance(key, int):
@@ -84,7 +82,7 @@ class Cards:
             del self.__cards[str(key)]
             self.__idx.remove(str(key))
         else:
-            raise KeyError("the key must be `str` or `int`")
+            raise KeyError("the key must be `str`, `int` or `Card`")
 
     def __binary_search(self, card: Card, st: int, ed: int) -> int:
         if ed <= st:
@@ -228,15 +226,80 @@ class Cards:
         return return_list
 
     @staticmethod
-    def is_sequence(played_cards: Cards) -> bool:
-        return played_cards._regularity == CardsRegularity.sequence
+    def is_sequence(cards: Cards) -> bool:
+        """Cardsがsequenceかどうか判定します．
+
+        既に_regularity属性にsequenceがある場合は即座にTrueを返します．
+        noneの場合は，sequenceかどうか判定し結果を返します．
+        それ以外の場合はFalseを返します．
+
+        Args:
+            cards (Cards): 判定するCardsクラスを指定．
+
+        Returns:
+            bool
+
+        Notes:
+            staticmethodのため，インスタンスでも引数に`self`が必要です．
+        """
+        if cards._regularity == CardsRegularity.none:
+            if len(cards) < 3:
+                return False
+            for i in range(1, len(cards)):
+                if not cards[i - 1] + 1 == cards[i]:
+                    return False
+            return True
+        return cards._regularity == CardsRegularity.sequence
 
     @staticmethod
     def is_equal(cards: Cards) -> bool:
+        """`Cards`が`equal`かどうか判定します．
+
+        既に`_regularity`属性に`equal`がある場合は即座に`True`を返します．
+        `none`の場合は，`equal`かどうか判定し結果を返します．
+        それ以外の場合は`False`を返します．
+
+        Args:
+            cards (Cards): 判定するCardsクラスを指定．
+
+        Returns:
+            bool
+
+        Notes:
+            staticmethodのため，インスタンスでも引数に`self`が必要です．
+        """
+        if cards._regularity == CardsRegularity.none:
+            if len(cards) < 2:
+                return False
+            f_card = cards[0]
+            for card in cards:
+                if not f_card == card:
+                    return False
+            return True
         return cards._regularity == CardsRegularity.equal
 
     @staticmethod
     def is_one(cards: Cards) -> bool:
+        """`Cards`が`one`かどうか判定します．
+
+        既に`_regularity`属性に`one`がある場合は即座に`True`を返します．
+        `none`の場合は，len(1)の場合に`True`を返します．
+        それ以外の場合は`False`を返します．
+
+        Args:
+            cards (Cards): 判定するCardsクラスを指定．
+
+        Returns:
+            bool
+
+        Notes:
+            staticmethodのため，インスタンスでも引数に`self`が必要です．
+        """
+        if cards._regularity == CardsRegularity.none:
+            if len(cards) == 1:
+                return True
+            else:
+                return False
         return cards._regularity == CardsRegularity.one
 
     def lookfor_sequence(self, played_cards: Cards = None) -> list[Cards]:
@@ -250,6 +313,8 @@ class Cards:
         """
         li = []
         if isinstance(played_cards, Cards):
+            if not Cards.is_sequence(played_cards):
+                ValueError(f"played_cards._regularity is {played_cards._regularity}. must be `sequence`")
             num = len(played_cards)
             min_card = played_cards[0]
         else:
@@ -327,7 +392,7 @@ class Cards:
         return li
 
     @classmethod
-    def create_cards(cls, is_shuffle: bool = True, player_num: int = 4, joker_num: int = 2) -> list[Cards]:
+    def create_cards(cls, is_shuffle: bool = True, player_num: int = 4, joker_num: int = 2) -> tuple:
         """
 
         Args:
@@ -346,9 +411,10 @@ class Cards:
             cards.extend([Card.from_str(f"{suite}{num}") for num in range(1, 14)])
         if is_shuffle:
             shuffle(cards)
-
-        return [Cards(cards[len(cards) * i // player_num: len(cards) * (i + 1) // player_num]) for i in
-                range(player_num)]
+        if player_num < 1:
+            return tuple(cards)
+        return tuple(Cards(cards[len(cards) * i // player_num: len(cards) * (i + 1) // player_num]) for i in
+                     range(player_num))
 
     def lookfor_candidate_cards_set(self, played_cards: Cards = None) -> list[Cards]:
         """
@@ -385,4 +451,8 @@ if __name__ == "__main__":
     print(li[1:3])
     print([str(item) for item in li.lookfor_sequence()])
     print([str(item) for item in li.lookfor_equal()])
+    print(li.lookfor_candidate_cards_set())
+    assert Cards([Card.from_str("he5"), Card.from_str("di5")], CardsRegularity.equal) < Cards([Card.from_str("cl2"),
+                                                                                               Card.from_str("sp2")],
+                                                                                              CardsRegularity.equal)
     print(Cards.create_cards())
