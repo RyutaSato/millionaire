@@ -1,9 +1,12 @@
-from fastapi import Cookie, Depends, FastAPI, Header, Query, Response
+from fastapi import Cookie, Depends, FastAPI, Header, Query, Response, Request
 from starlette import status
 from starlette.exceptions import WebSocketException
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import HTMLResponse, FileResponse, RedirectResponse, JSONResponse
 from starlette.websockets import WebSocket
+import logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
 origins = [
@@ -22,20 +25,22 @@ app.add_middleware(
 
 
 @app.get("/", )
-async def get(session: str = Cookie(default=None)):
-    print(session)
-    return FileResponse(path="millionaire/static/index.html",
+async def get(request: Request):
+    logger.info(f"accessed: ip: {request.client.host}, port:{request.client.port}")
+    response = FileResponse(path="millionaire/static/index.html",
                         headers={"token": "01835c3a-fb3d-b4e2-a43e-1682dc0be131",
                                  "Access-Control-Allow-Origin": "http://127.0.0.1:8000"})
+    return response
 
 
 @app.get("/get_token")
-def get_token(session: str = Header(default=None)):
+def get_token(request: Request, session: str = Header(default=None)):
+    print(request.cookies)
     response = JSONResponse({"token": "01835c3a-fb3d-b4e2-a43e-1682dc0be131"})
-    print(response.headers)
-    return JSONResponse({'token': '01835c3a-fb3d-b4e2-a43e-1682dc0be131'})
+    response.set_cookie("key2", "value2", )  # TODO: replace set_cookie with token
+    return response
 
-
+# example of dependency
 async def get_cookie_or_token(
         websocket: WebSocket,
         session: str | None = Cookie(default=None),
@@ -49,9 +54,8 @@ async def get_cookie_or_token(
 @app.websocket("/ws")
 async def websocket_endpoint(
         websocket: WebSocket,
-        token: str,
-        cookie_or_token: str = Depends(get_cookie_or_token),
-):
+        # cookie_or_token: str = Depends(get_cookie_or_token),
+        ):
     """
     Notes:
         type: websocket
@@ -81,10 +85,9 @@ async def websocket_endpoint(
     Returns:
 
     """
+    # TODO: websocket.cookies authentication
     await websocket.accept()
+    await websocket.send_text("connection succeed")
     while True:
         data = await websocket.receive_text()
-        await websocket.send_text(
-            f"Session cookie or query token value is: {cookie_or_token}"
-        )
         await websocket.send_text(f"Message text was: {data}")
