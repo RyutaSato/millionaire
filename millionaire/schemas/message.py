@@ -12,6 +12,7 @@ class Message(BaseModel):
         msg:
     """
     uid: UUID
-    created_by: str == __name__  # class名
-    created_at: datetime = datetime.now()
+    created_by: str  # class名
+    created_at: datetime
+    # = datetime.now() これは使えません．BaseModelは毎度生成されるわけではありません．
     msg: str  # 変更予定
