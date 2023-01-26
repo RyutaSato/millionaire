@@ -7,7 +7,6 @@ from logging import getLogger
 from starlette.websockets import WebSocket
 
 from millionaire.libs.room.baseroom import Room
-from millionaire.libs.room.room_generator import RoomGenerator
 from millionaire.libs.room.user import UserManager
 from millionaire.libs.room.waiting_room import WaitingRoom
 from millionaire.schemas.message import Message
@@ -59,10 +58,12 @@ class MessageBroker:
     async def __msg_switcher(self):
         try:
             async with asyncio.TaskGroup() as tg:
-                task_in = tg.create_task(self.__in())
-                task_out = tg.create_task(self.__out())
+                task_in = tg.create_task(self.__in(), name="self.__in()")
+                task_out = tg.create_task(self.__out(), name="self.__out()")
         except* Exception as exc:
-            logger.error(exc)
+            logger.error(exc.args)
+        finally:
+            logger.info(f"in: cancelled? {task_in.cancelled()} out: cancelled? {task_out.cancelled()}")
             if not task_in.done():
                 task_in.cancel()
             if not task_out.done():
@@ -71,9 +72,10 @@ class MessageBroker:
     async def __in(self):
         while True:
             request: Message = await self.__in_que.get()
+            logger.info(f"in: {request.json()}")
             room_id = self.__user_to_room.get(request.uid)
             if room_id is not None:
-                await self.__rooms[room_id].msg_in_que(request)
+                await self.__rooms[room_id].msg_in_que.put(request)
             else:
                 logger.error(f"Invalid uid: {request.uid}")
                 logger.error(f"content: {request.json()}")
@@ -81,6 +83,7 @@ class MessageBroker:
     async def __out(self):
         while True:
             request: Message = await self.__out_que.get()
+            logger.info(f"out: {request.json()}")
             conn: MessageProvider = self.__online.get(request.uid)
             if conn is not None:
                 await conn.send(request.msg)

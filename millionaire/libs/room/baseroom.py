@@ -7,7 +7,6 @@ from uuid import UUID
 from ulid import ULID
 
 from millionaire.libs.room.user import UserManager
-from millionaire.schemas.message import Message
 
 class RoomType(Enum):
     waiting = "waiting"

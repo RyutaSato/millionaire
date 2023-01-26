@@ -1,19 +1,16 @@
 from uuid import UUID
-
-from millionaire.libs.match.card import Card
 from millionaire.libs.match.cards import Cards
 
 
 class Player:
-    """
+    """UserがPlayerとして振る舞う時の状態を保持します，このクラスは，matchごとに作成されます．
     Notes:
         self.passedはプライベート属性に変更予定です．
         各ターンのカードの選択はこのクラスが単独で行います．
     """
 
-    def __init__(self, uuid: UUID, name: str, __ws=None,):
-        self.__ws = __ws
-        self.uuid = uuid
+    def __init__(self, uid: UUID, name: str):
+        self.uid = uid
         self.name = name
         # self.connection_status = ???
         self.cards = Cards()

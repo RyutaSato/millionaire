@@ -88,8 +88,8 @@ class MessageProvider:
     async def __in(self):
         while True:
             msg = await self.__ws.receive_text()
-            logger.info(f"receive: {self.__ws.client.port}: {msg}")
-            request = Message(uid=self.uid, msg=msg)
+            logger.info(f"receive: {self.uid}: {msg}")
+            request = Message(uid=self.uid, created_by="client", msg=msg)
             await self.__in_msg_que.put(request)
             # for debug
             await self.__out_msg_que.put(msg)
