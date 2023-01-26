@@ -1,26 +1,27 @@
+from __future__ import annotations
 import asyncio
 import typing
 
-from fastapi import Depends, HTTPException
-from starlette import status
-from starlette.websockets import WebSocket, WebSocketDisconnect
+from fastapi import Depends, HTTPException, status, WebSocketDisconnect
 from logging import getLogger
 
+from starlette.websockets import WebSocket
+
 from millionaire.ws.auth import authenticator
-from millionaire.ws.connections_manager import connections
 
 logger = getLogger(__name__)
 
 
-class WebSocketClient:
-    def __init__(self, ws: WebSocket,
-                 is_authed: bool = Depends(authenticator)):
+class ConnectionManager:
+    """このクラスの責任は，１つのクライアントアクセスの接続状態管理をすることです．
+
+    このクラスは，ws接続リクエストごとに作成され，認証プロセス後，queueによるメッセージの送受信を受け付けます，
+    切断された後の後処理までを担当します．なお，メッセージの内容については関与しません．
+    """
+    def __init__(self, ws: WebSocket):  # 機能していない
         logger.info(f"access: {ws.client.host}:{ws.client.port}")
-        if not is_authed:
-            logger.info(f"cookie: {ws.cookies}")
-            raise HTTPException(status_code=status.WS_1008_POLICY_VIOLATION)
         self.name = ws.client.host + ":" + str(ws.client.port)
-        self.status = "" # TODO: ENUMで定義
+        self.status = ""  # TODO: ENUMで定義
         self.__ws = ws
         self.__in_msg_que = asyncio.Queue()
         self.__out_msg_que = asyncio.Queue()
@@ -28,10 +29,10 @@ class WebSocketClient:
     def __await__(self) -> typing.Generator:
         return self.dispatch().__await__()
 
-    async def dispatch(self) -> None:
+    async def dispatch(self):
         # Websocket lifecycle
         await self.__on_connect()
-        connections.add(self)
+        # connections.add(self)
         close_code: int = status.WS_1000_NORMAL_CLOSURE
         try:
             async with asyncio.TaskGroup() as tg:
@@ -53,7 +54,7 @@ class WebSocketClient:
                     logger.info(f"task canceled: {task}")
                     task.cancel()
             logger.info(f"websocket disconnected")
-            connections.remove(self.name)
+            # connections.remove(self.name)
         # try:
         #     while True:
         #         data = await self.__ws.receive_text()

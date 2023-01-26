@@ -6,7 +6,7 @@ from starlette.responses import HTMLResponse, FileResponse, RedirectResponse, JS
 from starlette.websockets import WebSocket
 import logging
 
-from millionaire.ws.client import WebSocketClient
+from millionaire.ws.connections import ConnectionsManager
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -15,8 +15,9 @@ app = FastAPI()
 origins = [
     "http://localhost",
     "http://localhost:8000",
-    "http://127.0.0.1:8000"
-    "http://127.0.0.1"
+    "http://127.0.0.1:8000",
+    "http://127.0.0.1",
+    "ws://128.0.0.1:8000"
 ]
 app.add_middleware(
     CORSMiddleware,
@@ -31,8 +32,8 @@ app.add_middleware(
 async def get(request: Request):
     logger.info(f"accessed: ip: {request.client.host}, port:{request.client.port}")
     response = FileResponse(path="millionaire/static/index.html",
-                        headers={"token": "01835c3a-fb3d-b4e2-a43e-1682dc0be131",
-                                 "Access-Control-Allow-Origin": "http://127.0.0.1:8000"})
+                            headers={"token": "01835c3a-fb3d-b4e2-a43e-1682dc0be131",
+                                     "Access-Control-Allow-Origin": '["http://127.0.0.1:8000", "ws://128.0.0.1:8000"]'})
     return response
 
 
@@ -42,6 +43,7 @@ def get_token(request: Request, session: str = Header(default=None)):
     response = JSONResponse({"token": "01835c3a-fb3d-b4e2-a43e-1682dc0be131"})
     response.set_cookie("token", "01835c3a-fb3d-b4e2-a43e-1682dc0be131", )  # TODO: replace set_cookie with token
     return response
+
 
 # example of dependency
 async def get_cookie_or_token(
@@ -53,4 +55,5 @@ async def get_cookie_or_token(
         raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
     return session or token
 
-app.add_api_websocket_route("/ws", WebSocketClient)
+connections = ConnectionsManager()
+app.add_api_websocket_route("/ws", connections)
