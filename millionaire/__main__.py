@@ -6,7 +6,7 @@ from starlette.responses import HTMLResponse, FileResponse, RedirectResponse, JS
 from starlette.websockets import WebSocket
 import logging
 
-from millionaire.ws.connections import ConnectionsManager
+from millionaire.ws.message_broker import MessageBroker
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -55,5 +55,5 @@ async def get_cookie_or_token(
         raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
     return session or token
 
-connections = ConnectionsManager()
+connections = MessageBroker()
 app.add_api_websocket_route("/ws", connections)

@@ -6,24 +6,27 @@ from fastapi import Depends, HTTPException, status, WebSocketDisconnect
 from logging import getLogger
 
 from starlette.websockets import WebSocket
+from ulid import ULID
 
+from millionaire.schemas.message import Message
 from millionaire.ws.auth import authenticator
 
 logger = getLogger(__name__)
 
 
-class ConnectionManager:
+class MessageProvider:
     """このクラスの責任は，１つのクライアントアクセスの接続状態管理をすることです．
 
     このクラスは，ws接続リクエストごとに作成され，認証プロセス後，queueによるメッセージの送受信を受け付けます，
     切断された後の後処理までを担当します．なお，メッセージの内容については関与しません．
     """
-    def __init__(self, ws: WebSocket):  # 機能していない
+    def __init__(self, ws: WebSocket, msg_que: asyncio.Queue):  # 機能していない
         logger.info(f"access: {ws.client.host}:{ws.client.port}")
+        self.uid = ULID().to_uuid()
         self.name = ws.client.host + ":" + str(ws.client.port)
         self.status = ""  # TODO: ENUMで定義
         self.__ws = ws
-        self.__in_msg_que = asyncio.Queue()
+        self.__in_msg_que = msg_que
         self.__out_msg_que = asyncio.Queue()
 
     def __await__(self) -> typing.Generator:
@@ -36,8 +39,8 @@ class ConnectionManager:
         close_code: int = status.WS_1000_NORMAL_CLOSURE
         try:
             async with asyncio.TaskGroup() as tg:
-                task_in_que: asyncio.Task = tg.create_task(self.__in(), name="__in")
-                task_out_que: asyncio.Task = tg.create_task(self.__out(), name="__out")
+                task_in_que: asyncio.Task = tg.create_task(self.__in(), name="in")
+                task_out_que: asyncio.Task = tg.create_task(self.__out(), name="out")
                 tasks = [task_out_que, task_in_que]
         except* WebSocketDisconnect:
             pass
@@ -86,6 +89,7 @@ class ConnectionManager:
         while True:
             msg = await self.__ws.receive_text()
             logger.info(f"receive: {self.__ws.client.port}: {msg}")
-            await self.__in_msg_que.put(msg)
+            request = Message(uid=self.uid, msg=msg)
+            await self.__in_msg_que.put(request)
             # for debug
             await self.__out_msg_que.put(msg)
