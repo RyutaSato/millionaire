@@ -20,5 +20,9 @@ class Play:
         return History(
             id=self.play_id,
             created_at=self.created_at,
-            users=[player.uuid for player in self.players]
+            users=[player.uid for player in self.players]
         )
+
+
+if __name__ == '__main__':
+    pass
