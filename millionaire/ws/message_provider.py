@@ -69,18 +69,27 @@ class MessageProvider:
         await self.__ws.send_text(f"received: {msg}")
 
     async def send(self, msg):
+        """
+
+        Args:
+            msg(InPlayMessage | OutPlayMessage | RoomMessage):
+
+        Returns:
+            None
+        """
         await self.__out_msg_que.put(msg)
 
     async def __out(self):
         while True:
+            # msg: InPlayMessage | OutPlayMessage | RoomMessage
             msg = await self.__out_msg_que.get()
-            await self.__ws.send_text(msg)
+            await self.__ws.send_json(msg)
 
     async def __in(self):
         while True:
-            msg = await self.__ws.receive_text()
+            msg: dict = await self.__ws.receive_json()
             logger.info(f"receive: {self.uid}: {msg}")
-            request = Message(uid=self.uid, created_by="client", msg=msg)
+            request = Message(uid=self.uid, created_by="client", **msg)
             await self.__in_msg_que.put(request)
             # for debug
             await self.__out_msg_que.put(msg)
