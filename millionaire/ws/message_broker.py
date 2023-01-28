@@ -10,6 +10,7 @@ from millionaire.libs.room.baseroom import Room
 from millionaire.libs.room.user import UserManager
 from millionaire.libs.room.waiting_room import WaitingRoom
 from millionaire.schemas.message import Message
+from millionaire.schemas.msg_types import StatusTypes
 from millionaire.ws.message_provider import MessageProvider
 
 logger = getLogger(__name__)
@@ -26,8 +27,8 @@ class MessageBroker:
         self.__user_to_room: dict[UUID, UUID] = dict()
         self.__rooms: dict[UUID, Room] = dict()
         waiting_room = WaitingRoom()
-        self.__rooms[waiting_room.uid] = waiting_room
-        self.__waiting_room_uid = waiting_room.uid
+        self.__rooms[waiting_room.room_id] = waiting_room
+        self.__waiting_room_uid = waiting_room.room_id
         self.__in_que = asyncio.Queue()
         self.__out_que = asyncio.Queue()
         self.__msg_task = asyncio.create_task(self.__msg_switcher(), name="Message Switcher")
@@ -47,10 +48,9 @@ class MessageBroker:
         self.__remove_client(conn)
 
     def __add_client(self, client: MessageProvider):
-        logger.info(f"connections: added: {client.name}")
+        logger.info(f"connections: added: {client.uid}")
         self.__online[client.uid] = client
-        self.__users[client.uid] = UserManager(uid=client.uid,
-                                               name=client.name, )
+        self.__users[client.uid] = UserManager(uid=client.uid, status=StatusTypes.waiting)
         self.__rooms[self.__waiting_room_uid].add(client)
         self.__user_to_room[client.uid] = self.__waiting_room_uid
         logger.info(f"connections: total: {len(self.__online)}")
