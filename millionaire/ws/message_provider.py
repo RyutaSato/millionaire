@@ -57,14 +57,14 @@ class MessageProvider:
         # Handle your new connection here
         await self.__ws.accept()
         logger.info(f"connect: client: {self.__ws.client.host}")
-        await self.__ws.send_text("connection success")
+        await self.__ws.send_json(NoneMessage(body="connection success"))
 
     async def __on_disconnect(self, close_code: int):
         # Handle client disconnect here
-        logger.info(f"disconnect: client: {self.__ws.client.host}")
+        logger.info(f"disconnect: client: {self.uid} code: {close_code}")
 
     async def _on_receive(self, msg: str):
-        logger.info(f"receive: {self.__ws.client.host}: {msg}")
+        logger.info(f"receive client: {self.uid} : {msg}")
         await self.__ws.send_text(f"received: {msg}")
 
     async def send(self, msg):
