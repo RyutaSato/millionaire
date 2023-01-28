@@ -23,8 +23,6 @@ class MessageProvider:
     def __init__(self, ws: WebSocket, msg_que: asyncio.Queue):  # 機能していない
         logger.info(f"access: {ws.client.host}:{ws.client.port}")
         self.uid = ULID().to_uuid()
-        self.name = ws.client.host + ":" + str(ws.client.port)
-        self.status = ""  # TODO: ENUMで定義
         self.__ws = ws
         self.__in_msg_que = msg_que
         self.__out_msg_que = asyncio.Queue()
@@ -33,9 +31,7 @@ class MessageProvider:
         return self.dispatch().__await__()
 
     async def dispatch(self):
-        # Websocket lifecycle
         await self.__on_connect()
-        # connections.add(self)
         close_code: int = status.WS_1000_NORMAL_CLOSURE
         try:
             async with asyncio.TaskGroup() as tg:
@@ -57,11 +53,6 @@ class MessageProvider:
                     logger.info(f"task canceled: {task}")
                     task.cancel()
             logger.info(f"websocket disconnected")
-            # connections.remove(self.name)
-        # try:
-        #     while True:
-        #         data = await self.__ws.receive_text()
-        #         await self._on_receive(data)
 
     async def __on_connect(self):
         # Handle your new connection here
