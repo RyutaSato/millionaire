@@ -33,12 +33,20 @@ class MessageBroker:
         self.__msg_task = asyncio.create_task(self.__msg_switcher(), name="Message Switcher")
 
     async def __call__(self, websocket: WebSocket):
-        conn = MessageProvider(websocket, self.__in_que)
-        self.add_client(conn)
-        await conn
-        self.remove_client(conn)
+        """ '/ws'のendpointです．
 
-    def add_client(self, client: MessageProvider):
+        Args:
+            websocket:
+
+        Returns:
+
+        """
+        conn = MessageProvider(websocket, self.__in_que)
+        self.__add_client(conn)
+        await conn
+        self.__remove_client(conn)
+
+    def __add_client(self, client: MessageProvider):
         logger.info(f"connections: added: {client.name}")
         self.__online[client.uid] = client
         self.__users[client.uid] = UserManager(uid=client.uid,
@@ -47,7 +55,7 @@ class MessageBroker:
         self.__user_to_room[client.uid] = self.__waiting_room_uid
         logger.info(f"connections: total: {len(self.__online)}")
 
-    def remove_client(self, client: MessageProvider):
+    def __remove_client(self, client: MessageProvider):
         logger.info(f"connections: remove: {client.uid}")
         del self.__online[client.uid]
         del self.__users[client.uid]
