@@ -2,14 +2,13 @@ from __future__ import annotations
 import asyncio
 import typing
 
-from fastapi import Depends, HTTPException, status, WebSocketDisconnect
+from fastapi import status, WebSocketDisconnect
 from logging import getLogger
 
 from starlette.websockets import WebSocket
 from ulid import ULID
 
-from millionaire.schemas.message import Message
-from millionaire.ws.auth import authenticator
+from millionaire.schemas.message import Message, NoneMessage
 
 logger = getLogger(__name__)
 
