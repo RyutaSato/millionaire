@@ -8,6 +8,7 @@ from millionaire.schemas.msg_types import MsgTypes, StatusTypes
 
 class NoneMessage(BaseModel):
     msg_type: MsgTypes = Literal['none']
+    body: str
 
 
 class InPlayMessage(BaseModel):
