@@ -11,3 +11,8 @@ class StatusTypes(StrEnum):
     waiting = auto()
     matching = auto()
     playing = auto()
+
+class RoomCmdTypes(StrEnum):
+    ch_room = auto()
+    mk_room = auto()
+
