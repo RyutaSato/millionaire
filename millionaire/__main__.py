@@ -1,4 +1,7 @@
-﻿from fastapi import Cookie, Depends, FastAPI, Header, Query, Response, Request
+﻿import asyncio
+from uuid import UUID
+
+from fastapi import Cookie, Depends, FastAPI, Header, Query, Response, Request
 from starlette import status
 from starlette.exceptions import WebSocketException
 from starlette.middleware.cors import CORSMiddleware
@@ -6,6 +9,8 @@ from starlette.responses import HTMLResponse, FileResponse, RedirectResponse, JS
 from starlette.websockets import WebSocket
 import logging
 
+from millionaire.libs.room.baseroom import Room
+from millionaire.libs.room.rooms_manager import RoomManager
 from millionaire.ws.message_broker import MessageBroker
 
 logging.basicConfig(level=logging.INFO)
@@ -55,5 +60,9 @@ async def get_cookie_or_token(
         raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
     return session or token
 
-connections = MessageBroker()
+room: dict[UUID, Room] = dict()
+user_to_room: dict[UUID, UUID] = dict()
+room_cmd_que = asyncio.Queue()
+room_manager = RoomManager(room_cmd_que=room_cmd_que, user_to_room=user_to_room, room=room)
+connections = MessageBroker(room_manager=room_manager, room_cmd_que=room_cmd_que, user_to_room=user_to_room, room=room)
 app.add_api_websocket_route("/ws", connections)
