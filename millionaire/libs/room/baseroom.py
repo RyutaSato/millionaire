@@ -6,6 +6,7 @@ from uuid import UUID
 
 from ulid import ULID
 
+from millionaire.libs.room.rooms_manager import RoomManager
 from millionaire.libs.room.user import UserManager
 from millionaire.schemas.message import Message
 
@@ -21,7 +22,8 @@ class BaseRoom:
 
     """
 
-    def __init__(self, room_type: RoomType):
+    def __init__(self, room_type: RoomType, room_manager: RoomManager):
+        self.__manager = room_manager
         self._room_id: UUID = ULID().to_uuid()
         self.created_at: datetime = datetime.now()
         self.room_type = room_type  # enumで定義

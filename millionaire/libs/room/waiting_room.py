@@ -11,11 +11,12 @@ MIN_PLAYER_NUM = 4
 
 
 class WaitingRoom(BaseRoom):
-    """クライアントがwebsocket接続し，認証後はまずこのクラスに格納されます．
+    """このクラスの役割は，userの状態管理です．
+    クライアントがwebsocket接続し，認証後はまずこのクラスに格納されます．
     """
 
-    def __init__(self):
-        super().__init__(RoomType.waiting)
+    def __init__(self, room_manager):
+        super().__init__(RoomType.waiting, room_manager)
         self.__matching_list: list[UUID] = []
 
     def msg_analyser(self, msg: Message):
@@ -33,7 +34,4 @@ class WaitingRoom(BaseRoom):
     def add_matching(self, uid: UUID):
         self.__matching_list.append(uid)
         if len(self.__matching_list) >= MIN_PLAYER_NUM:
-            pass
-        # TODO: この先の処理をどのようにやるか未定
-        # Roomの新規作成処理はRoomManagerに任せるべき！だとは思う．
-        # Command Queを用意してあげるべき
+            self.__manager.create_room([self.__matching_list.pop() for _ in range(MIN_PLAYER_NUM)])
