@@ -24,25 +24,25 @@ class BaseRoom:
 
     def __init__(self, room_type: RoomType, room_manager: RoomManager):
         self.__manager = room_manager
-        self._room_id: UUID = ULID().to_uuid()
-        self.created_at: datetime = datetime.now()
+        self.__room_id: UUID = ULID().to_uuid()
+        self.__created_at: datetime = datetime.now()
         self.room_type = room_type  # enumで定義
-        self._roommates: dict[UUID, UserManager] = dict()
+        self.__roommates: dict[UUID, UserManager] = dict()
         self.msg_in_que = asyncio.Queue()
         self._msg_in_task = asyncio.create_task(self.msg_parser())
 
     @property
     def room_id(self):
-        return self._room_id
+        return self.__room_id
 
     def add(self, user: UserManager):
-        self._roommates[user.uid] = user
+        self.__roommates[user.uid] = user
 
     def remove(self, user: UserManager):
-        del self._roommates[user.uid]
+        del self.__roommates[user.uid]
 
     def pop(self, uid: UUID):
-        return self._roommates.pop(uid)
+        return self.__roommates.pop(uid)
 
     async def msg_parser(self):
         while True:
@@ -53,5 +53,7 @@ class BaseRoom:
     def msg_analyser(self, msg: Message):
         raise NotImplementedError
 
+    async def send(self, msg):
+        await self.__manager.send(msg)
 
 Room = TypeVar("Room", bound=BaseRoom)
