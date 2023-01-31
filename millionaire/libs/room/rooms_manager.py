@@ -5,6 +5,7 @@ from millionaire.libs.room.baseroom import Room
 from millionaire.libs.room.match_room import MatchRoom
 from millionaire.libs.room.user import UserManager
 from millionaire.libs.room.waiting_room import WaitingRoom
+from millionaire.schemas.message import Message
 from millionaire.schemas.room_cmd import RoomCmd
 import logging
 
@@ -17,16 +18,21 @@ class RoomManager:
     なお，clientとのメッセージのやり取りは，各Roomインスタンスが行うものとし，RoomManagerは一切関与しません．
 
     """
-    def __init__(self, room_cmd_que: asyncio.Queue, user_to_room: dict[UUID, UUID], room: dict[UUID, Room]):
+    def __init__(
+            self,
+            # room_cmd_que: asyncio.Queue,
+            user_to_room: dict[UUID, UUID],
+            room: dict[UUID, Room],
+            out_msg_que: asyncio.Queue
+    ):
         self.__room = room
         self.__user_to_room = user_to_room
-
-        self.room_que = room_cmd_que
+        self.__out_msg_que = out_msg_que
+        self.room_que = asyncio.Queue()
         waiting_room = WaitingRoom(self)
         self.__room[waiting_room.room_id] = waiting_room
         self.__waiting_room_id = waiting_room.room_id
-        self.__que_task = asyncio.create_task(self.__que_task_func())
-        pass
+        # self.__que_task = asyncio.create_task(self.__que_task_func())
 
     def __await__(self):
         return
@@ -69,3 +75,6 @@ class RoomManager:
     def move_user(self, uid: UUID, to_room_id: UUID):
         user = self.pop_user(uid)
         self.add_user(user, to_room_id)
+
+    async def send(self, msg: Message):
+        await self.__out_msg_que.put(msg)
