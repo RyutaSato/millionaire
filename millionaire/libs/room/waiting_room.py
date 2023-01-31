@@ -32,6 +32,9 @@ class WaitingRoom(BaseRoom):
             user.status = msg.msg.status
 
     def add_matching(self, uid: UUID):
+        user = self.__roommates.get(uid)
+        user.status = StatusTypes.matching
         self.__matching_list.append(uid)
+        logger.info(f"uid: {uid} is in matching que... Now waiting people: {len(self.__matching_list)}")
         if len(self.__matching_list) >= MIN_PLAYER_NUM:
             self.__manager.create_room([self.__matching_list.pop() for _ in range(MIN_PLAYER_NUM)])
