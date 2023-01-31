@@ -17,6 +17,10 @@ class RoomManager:
     Roomのインスタンスを動的に生成，削除，変更を行います．
     なお，clientとのメッセージのやり取りは，各Roomインスタンスが行うものとし，RoomManagerは一切関与しません．
 
+    Attributes:
+        __room(asyncio.Queue): MessageBrokerと共通
+        __user_to_room(asyncio.Queue): MessageBrokerと共通
+
     """
     def __init__(
             self,

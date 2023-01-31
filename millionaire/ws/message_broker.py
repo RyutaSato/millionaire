@@ -16,6 +16,9 @@ logger = getLogger(__name__)
 class MessageBroker:
     """このクラスはサーバーに接続される全ての接続を保持し管理します．
     Fastapiのwebサーバー１つにつき１つのみ生成されます．
+    Attributes:
+        __user_to_room(dict[UUID, UUID]): このdictはRoomManagerと共通です．
+        __room(dict[UUID, Room]): このdictはRoomManagerと共通です．
     """
 
     def __init__(
