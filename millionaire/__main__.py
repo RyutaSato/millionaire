@@ -62,7 +62,8 @@ async def get_cookie_or_token(
 
 room: dict[UUID, Room] = dict()
 user_to_room: dict[UUID, UUID] = dict()
-room_cmd_que = asyncio.Queue()
-room_manager = RoomManager(room_cmd_que=room_cmd_que, user_to_room=user_to_room, room=room)
-connections = MessageBroker(room_manager=room_manager, room_cmd_que=room_cmd_que, user_to_room=user_to_room, room=room)
+# room_cmd_que = asyncio.Queue()
+out_msg_que: asyncio.Queue = asyncio.Queue()
+room_manager = RoomManager(user_to_room=user_to_room, room=room, out_msg_que=out_msg_que)
+connections = MessageBroker(room_manager=room_manager, user_to_room=user_to_room, room=room, out_msg_que=out_msg_que)
 app.add_api_websocket_route("/ws", connections)

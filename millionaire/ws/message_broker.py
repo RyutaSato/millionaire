@@ -24,7 +24,7 @@ class MessageBroker:
     def __init__(
             self,
             room_manager: RoomManager,
-            room_cmd_que: asyncio.Queue,
+            # room_cmd_que: asyncio.Queue,
             user_to_room: dict[UUID, UUID],
             room: dict[UUID, Room]
     ):
@@ -35,7 +35,7 @@ class MessageBroker:
         self.__in_que = asyncio.Queue()
         self.__out_que = asyncio.Queue()
         self.__room_manager = room_manager
-        self.__room_cmd_que = room_cmd_que
+        # self.__room_cmd_que = room_cmd_que
         self.__msg_task = asyncio.create_task(self.__msg_switcher(), name="Message Switcher")
 
     async def __call__(self, websocket: WebSocket):

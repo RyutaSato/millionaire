@@ -12,6 +12,8 @@ class StatusTypes(StrEnum):
     matching = auto()
     playing = auto()
 
+
+# DEPRECATED
 class RoomCmdTypes(StrEnum):
     ch_room = auto()
     mk_room = auto()

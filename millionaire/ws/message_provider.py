@@ -91,4 +91,4 @@ class MessageProvider:
             request = Message(uid=self.uid, created_by="client", **msg)
             await self.__in_msg_que.put(request)
             # for debug
-            await self.__out_msg_que.put(msg)
+            # await self.__out_msg_que.put(msg)
