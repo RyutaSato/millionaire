@@ -18,7 +18,10 @@ class MatchRoom(BaseRoom):
         # TODO: 試合終了後のコールバックを書く
 
     def msg_analyser(self, msg: Message):
-        pass
+        if not msg.msg_type != msg.msg_type.in_play:
+            logger.critical(f"msg_analyser got invalid type message {msg.msg_type}")
+            return
+
 
     async def init_play(self):
         # TODO: match ライブラリと連携する
