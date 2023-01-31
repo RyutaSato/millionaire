@@ -26,14 +26,15 @@ class MessageBroker:
             room_manager: RoomManager,
             # room_cmd_que: asyncio.Queue,
             user_to_room: dict[UUID, UUID],
-            room: dict[UUID, Room]
+            room: dict[UUID, Room],
+            out_msg_que: asyncio.Queue
     ):
         self.__online: dict[UUID, MessageProvider] = dict()
         self.__users: dict[UUID, UserManager] = dict()
         self.__user_to_room = user_to_room
         self.__room = room
         self.__in_que = asyncio.Queue()
-        self.__out_que = asyncio.Queue()
+        self.__out_que = out_msg_que
         self.__room_manager = room_manager
         # self.__room_cmd_que = room_cmd_que
         self.__msg_task = asyncio.create_task(self.__msg_switcher(), name="Message Switcher")
@@ -70,8 +71,8 @@ class MessageBroker:
     async def __msg_switcher(self):
         try:
             async with asyncio.TaskGroup() as tg:
-                task_in = tg.create_task(self.__in(), name="self.__in()")
-                task_out = tg.create_task(self.__out(), name="self.__out()")
+                task_in = tg.create_task(self.__in(), name="MessageBroker.__in()")
+                task_out = tg.create_task(self.__out(), name="MessageBroker.__out()")
         except* Exception as exc:
             logger.error(exc.args)
         finally:
