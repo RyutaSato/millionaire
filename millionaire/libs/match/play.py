@@ -13,14 +13,14 @@ class Play:
         self.cards = Cards()
         self.play_id: UUID = ULID().to_uuid()
         self.created_at: datetime = datetime.now()
-        self.players = players
+        self.players: dict[UUID, Player] = {player.uid: player for player in players}
         self.settings = settings
 
     def to_models(self):
         return History(
             id=self.play_id,
             created_at=self.created_at,
-            users=[player.uid for player in self.players]
+            users=[player.uid for player in self.players.values()]
         )
 
 
