@@ -45,3 +45,9 @@ class Message(BaseModel):
 
     class Config:
         use_enum_values = True
+
+if __name__ == '__main__':
+    out_play_message = OutPlayMessage(msg_type='out_play', play_type=PlayMsgTypes.my_cards, cards=['sp1', 'sp3'])
+    print(out_play_message.json())
+    out_play_message = OutPlayMessage(msg_type='out_play', play_type=PlayMsgTypes.my_cards)
+    print(out_play_message.json())
