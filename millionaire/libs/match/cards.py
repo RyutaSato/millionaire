@@ -185,7 +185,7 @@ class Cards:
             return cp_cards
         elif isinstance(other, Cards):
             for card in other:
-                cp_cards.__cards[str(card)] = card
+                cp_cards[str(card)] = card
         else:
             raise ValueError(f"type {type(other)} is invalid")
         return cp_cards
