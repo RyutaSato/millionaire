@@ -98,6 +98,9 @@ class Cards:
     def __repr__(self):
         return self.__str__()
 
+    def to_list_str(self) -> list[str]:
+        return [str(self[key]) for key in self.__idx]
+
     def __eq__(self, other: Card | Cards):
         if isinstance(other, Card):
             if self._regularity == CardsRegularity.one:
@@ -451,6 +454,7 @@ class Cards:
 if __name__ == "__main__":
     li = Cards([Card.from_str('sp2'), Card.from_str('sp1'), Card.from_str('he11')])
     print(li)
+    print(li.to_list_str())
     str_li = ["he5", "sp8", "di3", "cl1", "di4", "di5"]
     for s in str_li:
         li[s] = Card.from_str(s)
