@@ -7,6 +7,11 @@ class MsgTypes(StrEnum):
     in_play = auto()
     out_play = auto()
 
+class PlayMsgTypes(StrEnum):
+    my_cards = auto()
+    played_cards = auto()
+    is_skipped = auto()
+
 class StatusTypes(StrEnum):
     waiting = auto()
     matching = auto()
