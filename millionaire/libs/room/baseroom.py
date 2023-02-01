@@ -53,7 +53,7 @@ class BaseRoom:
     def msg_analyser(self, msg: Message):
         raise NotImplementedError
 
-    async def send(self, msg):
+    async def send(self, msg: Message):
         await self.__manager.send(msg)
 
 Room = TypeVar("Room", bound=BaseRoom)
