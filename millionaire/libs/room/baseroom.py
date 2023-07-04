@@ -48,7 +48,6 @@ class BaseRoom:
         while True:
             msg = await self.msg_in_que.get()  # from message_broker
             self.msg_analyser(msg)
-            # TODO: 構文解析
 
     def msg_analyser(self, msg: Message):
         raise NotImplementedError
