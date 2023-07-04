@@ -1,0 +1,9 @@
+version: "3"
+services:
+  millionaire:
+    build: .  # build or imageを指定する
+    volumes:  # データの永続化
+      - ".docker:/src/.venv"
+      - ".:/src"
+    ports:
+      - "8000:8000"  # ホストマシンのポート8000を、docker内のポート8000に接続する
